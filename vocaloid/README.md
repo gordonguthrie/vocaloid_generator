@@ -1,21 +1,7 @@
 # Vocaloid
 
-**TODO: Add description**
+This is an escript that will run over a vocaloid vpr file and run transforms on the voices
 
-## Installation
+# not even ALPHA - its a WIP
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `vocaloid` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:vocaloid, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/vocaloid>.
-
+It will generate sung chords from a basic vocal line
