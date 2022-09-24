@@ -23,11 +23,24 @@ defmodule Vocaloid.Args do
 
    defp validate(args) do
       %{file: f, transforms: ts} = args
-      case {f, ts} do
-         {nil, _}  -> {:error, "transforms ok, but no file"}
-         {_,   []} -> {:error, "file ok, but no transforms"}
-         {nil, []} -> {:error, "neither file nor transforms"}
-         {_,   _}  -> {:ok, args}
+      case parse_transforms(ts) do
+         {:ok, newts} ->
+            case {f, ts} do
+               {nil, _}  -> {:error, "transforms ok, but no file"}
+               {_,   []} -> {:error, "file ok, but no transforms"}
+               {nil, []} -> {:error, "neither file nor transforms"}
+               {_,   _}  -> {:ok, %{args | transforms: newts}}
+            end
+          {:error, e} ->
+            {:error, e}
       end
    end
+
+   defp parse_transforms(ts) do
+      IO.inspect(ts, label: "transforms to parse")
+      {:ok, contents} = :file.consult(ts)
+      IO.inspect(contents, label: "transforms contains")
+      {:ok, ts}
+   end
+
 end

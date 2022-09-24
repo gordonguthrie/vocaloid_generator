@@ -43,9 +43,9 @@ defmodule Vocaloid.CLI do
   end
 
   defp transform_temp_file(file) do
-    dir  = Path.dirname(file)
-    ext  = Path.extname(file)
-    base = Path.basename(file, ext)
+    dir   = Path.dirname(file)
+    ext   = Path.extname(file)
+    base  = Path.basename(file, ext)
     tmpdir = Path.join(dir, @tempdir)
     :ok = File.mkdir_p(tmpdir)
     zipfile = Path.join([tmpdir, base <> ".zip"])
@@ -54,7 +54,6 @@ defmodule Vocaloid.CLI do
   end
 
   defp transform(file) do
-    IO.inspect(file, label: "in transform")
     {:ok, ziphandle} = :zip.zip_open(file, [:memory])
     {:ok, [{_filename, contents}]} = :zip.zip_get(ziphandle)
     :ok = :zip.zip_close(ziphandle)
@@ -67,8 +66,8 @@ defmodule Vocaloid.CLI do
     for p <- parts, do: process_notes(p["notes"])
   end
 
-  defp process_notes(notes) do
-    for n <- notes, do: IO.inspect({n["number"], n["phoneme"]}, label: "note number")
+  defp process_notes(_notes) do
+    # for n <- notes, do: IO.inspect({n["number"], n["phoneme"]}, label: "note number")
   end
 
 end
