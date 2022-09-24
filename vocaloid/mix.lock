@@ -1,0 +1,4 @@
+%{
+  "jason": {:hex, :jason, "1.4.0", "e855647bc964a44e2f67df589ccf49105ae039d4179db7f6271dfd3843dc27e6", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "79a3791085b2a0f743ca04cec0f7be26443738779d09302e01318f97bdb82121"},
+  "unzip": {:hex, :unzip, "0.7.1", "b05a9bfb9775d77a773a1fd19767fcd5dadac45a9394ef7b76cab96164609213", [:mix], [], "hexpm", "c716122cfee2583f1cf2543575b28698dde40d3f68ef02dc453d04dc2171f431"},
+}
