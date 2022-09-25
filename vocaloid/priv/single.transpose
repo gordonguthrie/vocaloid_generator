@@ -1,0 +1,41 @@
+% this is an Erlang comment
+%
+% This file is evaluated as an Erlang form
+% and therefore has to end with a full stop
+% (Erlang has a Prolog-y syntax not an Algol-y one)
+%
+% transpositions are cardinal
+% so 5 means tranpose up a 5th
+% and -3 means tranpose down a 3rd
+% 1 is don't transpose (use the same note)
+% and 0 is a rest (ie don't transpose the note, leave a gap)
+% if your notes are not integers then the script will just crash
+% no validation is done on the input
+%
+% the format is a list of lists of lists
+% (this is to make it easier to rationalise about what chords you
+%  are generating)
+%
+% * the top level is a list of transforms
+%    (if the top level list has five elements it will take
+%    a single Vocaloid track and generate an additional
+%    5 tracks from it)
+% * the second level list is a list of parts
+% * the third level list is a list of notes
+%
+% the transformer will be guided by the structure of the
+% vocaloid file
+%
+% if you pass a 6 note transform to a 5 note part it will
+% transform 5 notes and tell you about the dropped 6th
+%
+% if you pass a 4 note transform to a 5 note part it will
+% transform 4 notes and tell you about the untouched 5th
+%
+% ditto with parts
+%
+% (see the file testing_transform.midi for a set of
+% more complex examples)
+[
+	[[5]]
+].

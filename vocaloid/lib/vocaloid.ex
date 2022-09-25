@@ -22,13 +22,12 @@ defmodule Vocaloid.CLI do
           true ->
             print_help(parsed)
           false ->
-            process_file(parsed)
+            :ok = process_file(parsed)
           end
       end
   end
 
   defp process_file(args) do
-    IO.inspect(args, label: "args is")
     sourcefile = Path.join(args.outputdir, args.base <> args.ext)
     # erlang zip only works on files with a `.zip` extension
     # make it so
@@ -47,14 +46,12 @@ defmodule Vocaloid.CLI do
     :ok = :zip.zip_close(ziphandle)
     {:ok, json} = Jason.decode(contents)
     %{"tracks" => tracks} = json
-    # dump(tracks)
     name = args.name
     original = case name do
       :first -> [first | _t] = tracks
                 [first]
       _      -> for %{"name" => ^name} = t <- tracks, do: t
     end
-    # IO.inspect(original, label: "original to transform")
     case original do
       [] ->
         IO.inspect(name, label: "You asked to transpose the track:")
@@ -62,16 +59,79 @@ defmodule Vocaloid.CLI do
         for t <- tracks, do: IO.inspect(t["name"], label: "track name:")
       _  ->
         [orig] = original
-        newtracks = transpose(args.transforms, orig, [])
+        newtracks = transpose(args.transforms, orig, 1, [])
+        {:ok, newjson} = Jason.encode(%{json | "tracks" => tracks ++ newtracks})
+        :ok = write_file(args, newjson)
     end
   end
 
-  defp transpose([],      _original, acc), do: acc
-  defp transpose([h | t], original,  acc) do
-    IO.inspect(h, label: "apply transform:")
-    IO.inspect(original["parts"], label: "to parts:")
-    IO.inspect(length(original["parts"]), label: "number of parts")
-    transpose(t, original, acc)
+  defp write_file(args, json) do
+    timestamp = make_timestamp()
+    tmpdir = Path.join([args.outputdir, "Project"])
+    jsonfile = Path.join([tmpdir, "sequence.json"])
+    :ok = File.mkdir_p(tmpdir)
+    IO.inspect(jsonfile, label: "jsonfile")
+    zipfile  = Path.join([args.outputdir, args.base <> timestamp <> ".vpr"])
+    :ok = File.write(jsonfile, json)
+    erlangjsonfile = String.to_charlist(jsonfile)
+    erlangzipfile  = String.to_charlist(zipfile)
+    {:ok, ^erlangzipfile} = :zip.create(erlangzipfile, [erlangjsonfile])
+    :ok
+  end
+
+  defp transpose([],      _original, _n, acc), do: acc
+  defp transpose([h | t],  original,  n, acc) do
+    parts = original["parts"]
+    newparts = transpose_parts(h, parts, n, 1, [])
+    trackname = "Transposed " <> make_timestamp()
+    newtrack = %{original | "parts" => newparts,
+                            "name"  => trackname}
+    transpose(t, original, n + 1, [newtrack | acc])
+  end
+
+  defp transpose_parts([], [], _, _, acc), do: acc
+  defp transpose_parts(ts, [], n, m, acc) do
+    transformed = length(acc)
+    untransformed = length(ts)
+    IO.puts("in tranpose #{n} for part #{m}:")
+    IO.puts("- #{transformed} parts transformed and #{untransformed} part transforms dropped")
+    acc
+  end
+  defp transpose_parts([], p, n, m, acc) do
+    transformed = length(acc)
+    untransformed = length(p)
+    IO.puts("in tranpose #{n} for part #{m}:")
+    IO.puts("- #{transformed} parts transformed and #{untransformed} parts not")
+    acc
+  end
+  defp transpose_parts([h1 | t1], [h2 | t2], n, m, acc) do
+    newnotes        = transpose_notes(h2["notes"], h1, n, m, acc)
+    newpart         = %{h2 | "notes"        => newnotes}
+    transpose_parts(t1, t2, n, m + 1, [newpart |acc])
+  end
+
+  defp transpose_notes([], [], _, _, acc), do: acc
+  defp transpose_notes(ts, [], n, m, acc) do
+    transformed = length(acc)
+    untransformed = length(ts)
+    IO.puts("in tranpose #{n} for part #{m}:")
+    IO.puts("- #{transformed} notes transformed and #{untransformed} transforms dropped")
+    acc
+  end
+  defp transpose_notes([], ns, n, m, acc) do
+    transformed = length(acc)
+    untransformed = length(ns)
+    IO.puts("in tranpose #{n} for part #{m}:")
+    IO.puts("- #{transformed} notes transformed and #{untransformed} notes not")
+    acc
+  end
+  defp transpose_notes([h1 | t1], [h2 | t2], n, m, acc) do
+    %{"number" => note} = h1
+    newacc = case h2 do
+                0 -> acc
+                n -> [%{h1 | "number" => note + n - 1} | acc]
+             end
+    transpose_notes(t1, t2, n, m, newacc)
   end
 
   defp print_help(args) do
@@ -109,19 +169,13 @@ defmodule Vocaloid.CLI do
     IO.puts("to a temp directory (.vocaloid_generator) first and renamed before processing.")
   end
 
-  defp dump(tracks) do
-    for t <- tracks, do: IO.inspect(Map.keys(t), label: "track keys")
-    for t <- tracks, do: IO.inspect(t["name"], label: "track name")
-    for t <- tracks, do: parse_parts(t["parts"])
-  end
-
-  defp parse_parts(parts) do
-    for p <- parts, do: IO.inspect(Map.keys(p), label: "part keys")
-    for p <- parts, do: process_notes(p["notes"])
-  end
-
-  defp process_notes(_notes) do
-    #for n <- notes, do: IO.inspect(Map.keys(n))
-  end
+  defp make_timestamp() do
+      raw       = DateTime.utc_now() |> DateTime.to_string()
+      kneaded   = String.replace(raw,       "\.", "_")
+      halfbaked = String.replace(kneaded,   "-",  "_")
+      cooling   = String.replace(halfbaked, ":",  "_")
+      cooked    = String.replace(cooling,   " ",  "_")
+      "_" <> cooked
+    end
 
 end
