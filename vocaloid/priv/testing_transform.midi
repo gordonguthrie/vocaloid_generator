@@ -13,11 +13,11 @@
 % no validation is done on the input
 %
 % the format is a list of lists of lists
-% (this is to make it easier to rationalise about what chords you
-%  are generating)
+% (this is to make it easier to rationalise about what chords
+%  you are generating)
 %
 % * the top level is a list of transforms
-%    (if the top level list has five elements it will take
+%    (eg if the top level list has five elements it will take
 %    a single Vocaloid track and generate an additional
 %    5 tracks from it)
 % * the second level list is a list of parts
@@ -34,13 +34,26 @@
 %
 % ditto with parts
 %
-% (see the file testing_transform.midi for a set of
-% more complex examples)
+% This transform is for testing against the Vocaloid file
+% 13_notes.vpr
+%
+% 13_notes.vpr has:
+* a single track with
+% * a single part with
+% * 13 notes
+%
+% these use cases cover:
+% * too many   parts
+% * goldilocks parts
+% * too few    parts
+% * too many   notes
+% * goldilocks notes
+% * too few    notes
 [
+	[[0, 0, 4,-8, 5],[1, 0]],
 	[[0, 0, 4,-3, 5]],
-	[[0, 3, 4,-3, 5]],
-	[[0, 0, 4,-8, 5]],
-	[[0, 0, 4,-3, 8]],
-	[[0, 3, 4,-5, 5]],
-	[[0, 3, 4,-5, 5]]
+	[],
+	[[0, 3, 4,-5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]],
+	[[0, 3, 4,-5, 5, 0, 0, 0, 0, 0, 0, 0, 1]],
+	[[0, 0, 4,-3, 8]]
 ].

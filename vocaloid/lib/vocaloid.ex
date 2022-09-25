@@ -51,22 +51,26 @@ defmodule Vocaloid.CLI do
     name = args.name
     original = case name do
       :first -> [first | _t] = tracks
-                first
+                [first]
       _      -> for %{"name" => ^name} = t <- tracks, do: t
     end
     # IO.inspect(original, label: "original to transform")
     case original do
       [] ->
-        IO.inspect("no track selected to be transformed, tracks available:")
+        IO.inspect(name, label: "You asked to transpose the track:")
+        IO.inspect("No track selected to be transformed, tracks available:")
         for t <- tracks, do: IO.inspect(t["name"], label: "track name:")
       _  ->
-        newtracks = transpose(args.transforms, original, [])
+        [orig] = original
+        newtracks = transpose(args.transforms, orig, [])
     end
   end
 
   defp transpose([],      _original, acc), do: acc
   defp transpose([h | t], original,  acc) do
-    IO.inspect(h, label: "apply transform")
+    IO.inspect(h, label: "apply transform:")
+    IO.inspect(original["parts"], label: "to parts:")
+    IO.inspect(length(original["parts"]), label: "number of parts")
     transpose(t, original, acc)
   end
 
