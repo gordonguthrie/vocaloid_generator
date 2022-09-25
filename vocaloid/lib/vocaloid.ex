@@ -2,8 +2,6 @@ defmodule Vocaloid.CLI do
 
   alias Vocaloid.Args
 
-  @tempdir ".vocaloid_generator"
-
   @moduledoc """
   Documentation for the `Vocaloid` vpr file transformer.
 
@@ -20,54 +18,106 @@ defmodule Vocaloid.CLI do
       {:error, errors} ->
         IO.inspect(errors, label: "invalid arguments")
       {:ok, parsed} ->
-        case parsed.dryrun do
+        case parsed.help do
           true ->
-            IO.inspect(parsed, label: "parsed")
+            print_help(parsed)
           false ->
-            process_file(String.to_charlist(parsed.file))
+            process_file(parsed)
           end
       end
   end
 
-  defp process_file(file) do
-    _dir  = Path.dirname(file)
-    ext  = Path.extname(file)
-    _base = Path.basename(file, ext)
-    # the Erlang module `zip` expects a `.zip` file extension
-    # make it so with a temporary file
-
-    _transformed = case ext do
-      ".zip" -> transform(file)
-      _      -> transform_temp_file(file)
+  defp process_file(args) do
+    IO.inspect(args, label: "args is")
+    sourcefile = Path.join(args.outputdir, args.base <> args.ext)
+    # erlang zip only works on files with a `.zip` extension
+    # make it so
+    inputfile = case args.ext do
+      ".zip" ->
+        sourcefile
+      _      ->
+        :ok = File.mkdir_p(args.inputdir)
+        zipfile = Path.join(args.inputdir, args.base <> ".zip")
+        :ok = File.cp(sourcefile, zipfile)
+        zipfile
     end
-  end
-
-  defp transform_temp_file(file) do
-    dir   = Path.dirname(file)
-    ext   = Path.extname(file)
-    base  = Path.basename(file, ext)
-    tmpdir = Path.join(dir, @tempdir)
-    :ok = File.mkdir_p(tmpdir)
-    zipfile = Path.join([tmpdir, base <> ".zip"])
-    :ok = File.cp(file, zipfile)
-    transform(String.to_charlist(zipfile))
-  end
-
-  defp transform(file) do
-    {:ok, ziphandle} = :zip.zip_open(file, [:memory])
+    erlangfilename = String.to_charlist(inputfile)
+    {:ok, ziphandle} = :zip.zip_open(erlangfilename, [:memory])
     {:ok, [{_filename, contents}]} = :zip.zip_get(ziphandle)
     :ok = :zip.zip_close(ziphandle)
     {:ok, json} = Jason.decode(contents)
     %{"tracks" => tracks} = json
+    # dump(tracks)
+    name = args.name
+    original = case name do
+      :first -> [first | _t] = tracks
+                first
+      _      -> for %{"name" => ^name} = t <- tracks, do: t
+    end
+    # IO.inspect(original, label: "original to transform")
+    case original do
+      [] ->
+        IO.inspect("no track selected to be transformed, tracks available:")
+        for t <- tracks, do: IO.inspect(t["name"], label: "track name:")
+      _  ->
+        newtracks = transpose(args.transforms, original, [])
+    end
+  end
+
+  defp transpose([],      _original, acc), do: acc
+  defp transpose([h | t], original,  acc) do
+    IO.inspect(h, label: "apply transform")
+    transpose(t, original, acc)
+  end
+
+  defp print_help(args) do
+    IO.puts("Usage of vocaloid")
+    IO.puts("")
+    IO.puts("This script takes the following parameters")
+    IO.puts("")
+    IO.puts("-h or --help (OPTIONAL)")
+    IO.puts("    Invokes help.")
+    IO.puts("")
+    IO.puts("-f <filename> or --file <filename> (REQUIRED)")
+    IO.puts("    The path/filename.ext of the file to have the transpositions applied to.")
+    IO.puts("")
+    IO.puts("-t <filename> or --transpositions <filename> (REQUIRED)")
+    IO.puts("    The path/filename.ext of the file containing the transpositions to be")
+    IO.puts("    applied.")
+    IO.puts("")
+    IO.puts("    Transpositions are cardinals - ie 5 means transpose up a 5th")
+    IO.puts("    1 means repeat the same note, and 0 is a rest. Can be negative too.")
+    IO.puts("")
+    IO.puts("    The transposition file is an Erlang term containing a list of lists")
+    IO.puts("    a new Vocaloid track will be generated for each list in the top list")
+    IO.puts("    and the transposition of the elements in the list will be applied")
+    IO.puts("    note by noteto the selected Vocaloid track.")
+    IO.puts("")
+    IO.puts("    There is a sample Vocaloid track and transposition in ./priv")
+    IO.puts("")
+    IO.puts("-n <quoted string>  (OPTIONAL)")
+    IO.puts("    Name of the Vocaloid track to be transformed.")
+    IO.puts("    (If omitted the first track will be selected.)")
+    IO.puts("")
+    IO.inspect(args, label: "parsed arguments")
+    IO.puts("")
+    IO.puts("NOTE: if the .ext isn't .zip the file (usually a .vpr) will be copied")
+    IO.puts("to a temp directory (.vocaloid_generator) first and renamed before processing.")
+  end
+
+  defp dump(tracks) do
+    for t <- tracks, do: IO.inspect(Map.keys(t), label: "track keys")
+    for t <- tracks, do: IO.inspect(t["name"], label: "track name")
     for t <- tracks, do: parse_parts(t["parts"])
   end
 
   defp parse_parts(parts) do
+    for p <- parts, do: IO.inspect(Map.keys(p), label: "part keys")
     for p <- parts, do: process_notes(p["notes"])
   end
 
   defp process_notes(_notes) do
-    # for n <- notes, do: IO.inspect({n["number"], n["phoneme"]}, label: "note number")
+    #for n <- notes, do: IO.inspect(Map.keys(n))
   end
 
 end

@@ -1,3 +1,7 @@
+% this is an Erlang comment
+% This file is evaluated as an Erlang form
+% and therefore has to end with a full stop
+% (Erlang has a Prolog-y syntax not an Algol-y one)
 [
 	[r, 0, 4,-3, 5],
 	[r, 3, 4,-3, 5],
