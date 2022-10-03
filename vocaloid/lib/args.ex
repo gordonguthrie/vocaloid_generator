@@ -3,10 +3,12 @@ defmodule Vocaloid.Args do
       help:       false,
       origfile:   :nil,
       inputdir:   :nil,
+      workingdir: :nil,
       outputdir:  :nil,
       base:       :nil,
       ext:        :nil,
       transforms: [],
+      silent:     false,
       name:       :first
       ]
 
@@ -17,28 +19,32 @@ defmodule Vocaloid.Args do
       parse_args(args, acc)
    end
 
-   defp parse_args([],                       args), do: validate(args)
+   defp parse_args([],                           args), do: validate(args)
    defp parse_args(["-h"                   | t], args), do: parse_args(t, %Vocaloid.Args{args | help:       true})
-   defp parse_args(["-help"                | t], args), do: parse_args(t, %Vocaloid.Args{args | help:       true})
+   defp parse_args(["--help"               | t], args), do: parse_args(t, %Vocaloid.Args{args | help:       true})
+   defp parse_args(["-s"                   | t], args), do: parse_args(t, %Vocaloid.Args{args | silent:     true})
+   defp parse_args(["--silent"             | t], args), do: parse_args(t, %Vocaloid.Args{args | silent:     true})
    defp parse_args(["-t",               ts | t], args), do: parse_args(t, %Vocaloid.Args{args | transforms: ts})
    defp parse_args(["--transpositions", ts | t], args), do: parse_args(t, %Vocaloid.Args{args | transforms: ts})
    defp parse_args(["-n",               n  | t], args), do: parse_args(t, %Vocaloid.Args{args | name:       n})
    defp parse_args(["--name",           n  | t], args), do: parse_args(t, %Vocaloid.Args{args | name:       n})
    defp parse_args(["-f",               f  | t], args), do: parse_args(["--file", f | t], args)
    defp parse_args(["--file",           f  | t], args) do
-      dir   = Path.dirname(f)
-      ext   = Path.extname(f)
-      base  = Path.basename(f, ext)
+      dir  = Path.dirname(f)
+      ext  = Path.extname(f)
+      base = Path.basename(f, ext)
 
+      workingdir = Path.join(dir, @tempdir)
       inputdir = case ext do
          ".zip" -> dir
-         _      -> Path.join(dir, @tempdir)
+         _      -> workingdir
       end
-      newargs = %Vocaloid.Args{args | origfile:  f,
-                                      base:      base,
-                                      inputdir:  inputdir,
-                                      outputdir: dir,
-                                      ext:       ext}
+      newargs = %Vocaloid.Args{args | origfile:   f,
+                                      base:       base,
+                                      inputdir:   inputdir,
+                                      workingdir: workingdir,
+                                      outputdir:  dir,
+                                      ext:        ext}
       parse_args(t, newargs)
    end
 
