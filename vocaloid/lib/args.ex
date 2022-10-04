@@ -50,7 +50,7 @@ defmodule Vocaloid.Args do
 
    defp validate(args) do
       %{origfile: f, transforms: ts} = args
-      case parse_transforms(ts) do
+      resp = case parse_transforms(ts) do
          {:ok, newts} ->
             case {f, ts} do
                {nil, _}  -> {:error, "transforms ok, but no file"}
@@ -60,12 +60,27 @@ defmodule Vocaloid.Args do
             end
           {:error, e} ->
             {:error, e}
-      end
+         end
+      case args.help do
+         true ->
+            case resp do
+               {:ok, a}    -> {:ok, a}
+               {:error, x} -> IO.inspect(x, label: "comand would have failed with:")
+                              {:ok, args}
+            end
+         false ->
+            resp
+         end
    end
 
    defp parse_transforms(ts) do
-      {:ok, [contents]} = :file.consult(ts)
-      {:ok, contents}
+      case File.exists?(ts) do
+         true ->
+            {:ok, [contents]} = :file.consult(ts)
+            {:ok, contents}
+         false ->
+            {:error, "file with transforms doesn't exist"}
+      end
    end
 
 end
