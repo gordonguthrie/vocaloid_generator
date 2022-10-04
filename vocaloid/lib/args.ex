@@ -65,7 +65,7 @@ defmodule Vocaloid.Args do
          true ->
             case resp do
                {:ok, a}    -> {:ok, a}
-               {:error, x} -> IO.inspect(x, label: "comand would have failed with:")
+               {:error, x} -> IO.inspect(x, label: "command would have failed with:")
                               {:ok, args}
             end
          false ->
