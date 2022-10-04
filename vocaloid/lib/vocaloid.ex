@@ -16,7 +16,6 @@ defmodule Vocaloid.CLI do
       {:error, errors} ->
         IO.inspect(errors, label: "invalid arguments")
       {:ok, parsed} ->
-        IO.inspect(parsed, label: "parsed")
         case parsed.help do
           true ->
             print_help(parsed)
