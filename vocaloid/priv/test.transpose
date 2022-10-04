@@ -4,11 +4,10 @@
 % and therefore has to end with a full stop
 % (Erlang has a Prolog-y syntax not an Algol-y one)
 %
-% transpositions are cardinal
-% so 5 means tranpose up a 5th
-% and -3 means tranpose down a 3rd
-% 1 is don't transpose (use the same note)
-% and 0 is a rest (ie don't transpose the note, leave a gap)
+% transpositions are by semitone/midi number
+% if you wish to not include a not, use an atom
+% (by convention 'r' for rest)
+%
 % if your notes are not integers then the script will just crash
 % no validation is done on the input
 %
@@ -50,10 +49,10 @@
 % * goldilocks notes
 % * too few    notes
 [
-	[[0, 0, 4,-8, 5],[1, 0]],
+	[[r, r, 4,-8, 5],[1, 0]],
 	[[0, 0, 4,-3, 5]],
 	[],
-	[[0, 3, 4,-5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]],
+	[[0, 3, 4,-5, 5, 0, 0, 0, 0, r, r, 0, 0, 0, 0, 1]],
 	[[0, 3, 4,-5, 5, 0, 0, 0, 0, 0, 0, 0, 1]],
 	[[0, 0, 4,-3, 8]]
 ].

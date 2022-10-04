@@ -84,7 +84,7 @@ defmodule Vocaloid.CLI do
     :ok
   end
 
-  defp transpose([],      _original, _n, _verbsose, acc), do: Enum.reverse(acc)
+  defp transpose([],      _original, _n, _verbose, acc), do: Enum.reverse(acc)
   defp transpose([h | t],  original,  n,  verbose, acc) do
     parts = original["parts"]
     newparts = transpose_parts(h, parts, n, 1, verbose, [])
@@ -94,7 +94,7 @@ defmodule Vocaloid.CLI do
     transpose(t, original, n + 1, verbose, [newtrack | acc])
   end
 
-  defp transpose_parts([], [], _, _, _verbose, acc), do: acc
+  defp transpose_parts([], [], _, _, _verbose, acc), do: Enum.reverse(acc)
   defp transpose_parts(ts, [], n, m,  verbose, acc) do
     transformed = length(acc)
     untransformed = length(ts)
@@ -119,7 +119,7 @@ defmodule Vocaloid.CLI do
     transpose_parts(t1, t2, n, m + 1, verbose, [newpart |acc])
   end
 
-  defp transpose_notes([], [], _, _, _verbose, acc), do: acc
+  defp transpose_notes([], [], _, _, _verbose, acc), do: Enum.reverse(acc)
   defp transpose_notes(ts, [], n, m,  verbose, acc) do
     transformed = length(acc)
     untransformed = length(ts)
@@ -140,10 +140,9 @@ defmodule Vocaloid.CLI do
   end
   defp transpose_notes([h1 | t1], [h2 | t2], n, m, verbose, acc) do
     %{"number" => note} = h1
-    newacc = cond do
-                h2 <  0 -> [%{h1 | "number" => note + h2 + 1} | acc]
-                h2 == 0 -> acc
-                h2 >  0 -> [%{h1 | "number" => note + h2 - 1} | acc]
+    newacc = case is_atom(h2) do
+                true  -> acc
+                false -> [%{h1 | "number" => note + h2} | acc]
              end
     transpose_notes(t1, t2, n, m, verbose, newacc)
   end
@@ -170,8 +169,8 @@ defmodule Vocaloid.CLI do
     IO.puts("    The path/filename.ext of the file containing the transpositions to be")
     IO.puts("    applied.")
     IO.puts("")
-    IO.puts("    Transpositions are cardinals - ie 5 means transpose up a 5th")
-    IO.puts("    1 means repeat the same note, and 0 is a rest. Can be negative too.")
+    IO.puts("    Transpositions are by semitone and to drop a note, use an atom")
+    IO.puts("    by convention 'r' for rest)")
     IO.puts("")
     IO.puts("    The transposition file is an Erlang term containing a list of lists")
     IO.puts("    a new Vocaloid track will be generated for each list in the top list")
